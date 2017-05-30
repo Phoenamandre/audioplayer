@@ -379,13 +379,18 @@ Audios.prototype.buildAlbumRows = function(aAlbums){
 };
 
 Audios.prototype.loadAlbums = function(){
+	$this.loadAlbums(-1);
+}
+
+Audios.prototype.loadAlbums = function(artistId){
 	 $this = this;
-	 $('.sm2-bar-ui').hide();
+	 // $('.sm2-bar-ui').hide(); do not hide player
 	 this.AlbumContainer.hide();
 	  $('#loading').show();
 	$.ajax({
 		type : 'GET',
 		url : OC.generateUrl('apps/audioplayer/getmusic'),
+		data : {artist_id : artistId},
 		success : function(jsondata) {
 			$('#loading').hide();
 			if(jsondata.status === 'success' && jsondata.data !== 'nodata'){
@@ -696,10 +701,11 @@ Audios.prototype.loadIndividualCategory = function(evt) {
 		} else {
 			$('#individual-playlist-info').html(t('audioplayer','Selected')+': '+category_title);
 		} 			
-		
-		$this.AlbumContainer.hide();
+		if(category!=="Artist")
+			$this.AlbumContainer.hide();
 		$this.PlaylistContainer.hide();
-		$this.PlaylistContainer.show();
+		if(category!=="Artist")
+			$this.PlaylistContainer.show();
 		$('#individual-playlist').html('');
 		if ($('#individual-playlist').data('ui-sortable')) $('#individual-playlist').sortable("destroy");
 		$('#activePlaylist').html('');
@@ -707,7 +713,7 @@ Audios.prototype.loadIndividualCategory = function(evt) {
 		$('.header-artist').data('order', '');
 		$('.header-album').data('order', '');
 		var can_play = soundManager.html5;
-	
+		if(category!=="Artist"){
 		$.ajax({
 			type : 'GET',
 			url : OC.generateUrl('apps/audioplayer/getcategoryitems'),
@@ -871,6 +877,9 @@ Audios.prototype.loadIndividualCategory = function(evt) {
 			 	}
 		 	}
 		});
+		}else{
+			$this.loadAlbums(PlaylistId);
+		}
 
 	}else{
 		$this.AlbumContainer.hide();

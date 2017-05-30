@@ -178,15 +178,21 @@ class MusicController extends Controller {
 	* @NoAdminRequired
 	*/
 	public function loadAlbums(){
+		$artist_id = $this->params('artist_id');
 		$aAlbums=array();
 		$SQL="SELECT  `AA`.`id`,`AA`.`name` AS `nam`,`AA`.`cover` AS `cov`,`AA`.`artist_id` AS `aid`
 						FROM `*PREFIX*audioplayer_albums` `AA`
 			 			WHERE  `AA`.`user_id` = ?
-			 			ORDER BY `AA`.`name` ASC
 			 			";
-						
+		if(!empty($artist_id)){
+			$SQL .=" AND id in (SELECT album_id from *PREFIX*audioplayer_tracks WHERE artist_id = ?)";
+		}			
+		$SQL .="ORDER BY `AA`.`name` ASC";				
 		$stmt = $this->db->prepare($SQL);
-		$stmt->execute(array($this->userId));
+		if(!empty($artist_id))
+			$result = $stmt->execute(array($this->userId,$artist_id));
+		else
+			$result = $stmt->execute(array($this->userId));
 		$results = $stmt->fetchAll();
 
 		foreach($results as $row) {
@@ -238,18 +244,25 @@ class MusicController extends Controller {
     }
 	
 	public function loadSongs(){
+    		$artist_id = $this->params('artist_id');
+		
 		$aSongs=array();
 		$SQL="SELECT  `AT`.`id`,`AT`.`title` AS `tit`,`AT`.`number` AS `num`,
 				`AT`.`album_id` AS `aid`,`AT`.`length` AS `len`,`AT`.`file_id` AS `fid`,
 				`AT`.`mimetype` AS `mim`,`AA`.`name` AS `art`, `AT`.`disc` AS `dis` 
 						FROM `*PREFIX*audioplayer_tracks` `AT`
 						LEFT JOIN `*PREFIX*audioplayer_artists` `AA` ON `AT`.`artist_id` = `AA`.`id`
-			 			WHERE  `AT`.`user_id` = ?
-			 			ORDER BY `AT`.`album_id` ASC, `AT`.`disc` ASC, `AT`.`number` ASC
-			 			";
+			 			WHERE  `AT`.`user_id` = ?";
+if(!empty($artist_id)){
+			$SQL .="AND artist_id = ? ";
+		}
+		$SQL.="ORDER BY `AT`.`album_id` ASC,`AT`.`number` ASC";
 			
 		$stmt = $this->db->prepare($SQL);
-		$stmt->execute(array($this->userId));
+				if(!empty($artist_id))
+			$result = $stmt->execute(array($this->userId,$artist_id));
+		else
+			$result = $stmt->execute(array($this->userId));
 		$results = $stmt->fetchAll();
 
 		foreach($results as $row) {
